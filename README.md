@@ -1,1 +1,1 @@
-# sicoob-cobranca-php
+Classe em PHP cobranca online sicoob  
