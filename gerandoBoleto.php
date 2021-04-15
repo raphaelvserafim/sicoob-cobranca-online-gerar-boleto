@@ -1,5 +1,8 @@
 <?php
 
+require  'config.php';
+
+
 $sicoob = new Sicoob();
 
 $sicoob->conta = 1; // conta escolhida 
