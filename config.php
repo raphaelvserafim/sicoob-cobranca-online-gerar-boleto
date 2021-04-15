@@ -10,3 +10,5 @@ define("DB_USER",  "");
 define("DB_SENHA", "");
 
  
+require   'classe/db.php';
+require   'classe/sicoob.php';
