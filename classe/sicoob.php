@@ -182,7 +182,7 @@ class Sicoob
             CURLOPT_CUSTOMREQUEST => "POST",
             CURLOPT_POSTFIELDS => http_build_query($dados),
             CURLOPT_HTTPHEADER => array(
-                "Content-Type: www/form-url-encoded",
+                "Content-Type: application/x-www-form-urlencoded",
                 "Authorization: Basic " . $this->Basic . " "
             ),
         ));
@@ -225,7 +225,7 @@ class Sicoob
             CURLOPT_CUSTOMREQUEST => "POST",
             CURLOPT_POSTFIELDS => http_build_query($dados),
             CURLOPT_HTTPHEADER => array(
-                "Content-Type: www/form-url-encoded",
+                "Content-Type: application/x-www-form-urlencoded",
                 "Authorization: Basic " . $this->Basic . " "
             ),
         ));
