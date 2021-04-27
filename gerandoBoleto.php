@@ -14,10 +14,10 @@ $accessToken = $sicoob->consultaAccessToken();
 if ($accessToken["status"]) {
 
     // dados fatura 
-    $sicoob->seuNumero           = 2;
-    $sicoob->valorTitulo         = 5.00;
+    $sicoob->seuNumero           = 2; // ID da fatura 
+    $sicoob->valorTitulo         = 5.00; // valor do documento
     $sicoob->dataEmissao         = date('Y-m-d');
-    $sicoob->dataVencimento      = "2021-04-30";
+    $sicoob->dataVencimento      = "2021-04-30"; // Define a data de vencimento;
 
     // dados cliente
     $sicoob->numeroCpfCnpj       = "00000000000";
