@@ -16,7 +16,11 @@ if ($accessToken["status"]) {
 
     $sicoob->seuNumero           = 1;
     $sicoob->valorTitulo         = 5.00;
-    $sicoob->dataVencimento      = "21-04-2021";
+    
+    $sicoob->dataEmissao         = date('Y-m-d');
+    $sicoob->dataVencimento      = "2021-04-30";
+   
+  
 
     // dados cliente
     $sicoob->numeroCpfCnpj       = "000000000";
@@ -25,7 +29,7 @@ if ($accessToken["status"]) {
     $sicoob->bairro              = "Bairro";
     $sicoob->cidade              = "Guaranta Do Norte";
     $sicoob->cep                 = "78520000";
-    $sicoob->uf                  = "UF";
+    $sicoob->uf                  = "MT";
 
 
     $boleto  = $sicoob->gerarBoleto();
