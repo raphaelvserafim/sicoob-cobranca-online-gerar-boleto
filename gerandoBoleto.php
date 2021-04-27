@@ -20,9 +20,9 @@ if ($accessToken["status"]) {
     $sicoob->dataVencimento      = "2021-04-30";
 
     // dados cliente
-    $sicoob->numeroCpfCnpj       = "05525161125";
+    $sicoob->numeroCpfCnpj       = "00000000000";
     $sicoob->nome                = "Raphael";
-    $sicoob->endereco            = "Rua dos cedros";
+    $sicoob->endereco            = "Rua";
     $sicoob->bairro              = "Cidade Nova";
     $sicoob->cidade              = "Guaranta Do Norte";
     $sicoob->cep                 = "78520000";
