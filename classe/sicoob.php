@@ -7,7 +7,7 @@ class Sicoob
     private $dataHoraAgora;
 
     public $conta;
-  
+
     public $Basic;
     public $Key;
     public $Secret;
@@ -21,11 +21,11 @@ class Sicoob
     // Boleto 
 
     public $numeroContrato; //  Número que identifica o contrato do beneficiário no Sisbr.
-    public $modalidade = 1;   //  1 SIMPLES COM REGISTRO - 5 CARNÊ DE PAGAMENTOS - 6 INDEXADA - 14 CARTÃO DE CRÉDITO
+    public $modalidade     = 1;   //  1 SIMPLES COM REGISTRO - 5 CARNÊ DE PAGAMENTOS - 6 INDEXADA - 14 CARTÃO DE CRÉDITO
     public $numeroContaCorrente; // Número da Conta Corrente onde será realizado o crédito da liquidação do boleto.
     public $especieDocumento = "FAT";  /*Espécie do documento - CH - Cheque - DM - Duplicata Mercantil - DMI - Duplicata Mercantil Indicação - DS - Duplicata de Serviço - DSI - Duplicata Serviço Indicação - DR - Duplicata Rural - LC - Letra de Câmbio - NCC - Nota de Crédito Comercial - NCE - Nota de Crédito Exportação - NCI - Nota de Crédito Industrial - NCR - Nota de Crédito Rural - NP - Nota Promissória - NPR - Nota Promissória Rural - TM - Triplicata Mercantil - TS - Triplicata de Serviço - NS - Nota de Seguro - RC - Recibo - FAT - Fatura - ND - Nota de Débito - AP - Apólice de Seguro - ME - Mensalidade Escolar - PC - Pagamento de Consórcio - NF - Nota Fiscal - DD - Documento de Dívida - CC - Cartão de Crédito - BDP - Boleto Proposta - OU - Outros */
 
-    public $dataEmissao = NULL; // OPCIONAL BANCO GERA
+    public $dataEmissao; //  
     public $nossoNumero = NULL; // OPCIONAL BANCO GERA
 
     public $seuNumero; // Nº da sua fatura melhor para indentificar `Tamanho máximo 18` 
@@ -35,7 +35,7 @@ class Sicoob
 
     public $dataLimitePagamento = NULL;   // OPCIONAL
     public $valorAbatimento     = NULL;  // OPCIONAL
-    public $numeroParcela       = NULL; // OPCIONAL
+    public $numeroParcela       = 1;
 
 
     // desconto 
@@ -99,15 +99,15 @@ class Sicoob
 
     public function __construct()
     {
-        $this->db  = new DB;  
+        $this->db = new DB;
         $this->dataHoraAgora = date('Y-m-d H:i:s');
     }
 
     public function consultaCredenciaisConta()
     {
 
-        $credenciais        =  $this->db->select("SELECT * FROM sicoob_credenciais INNER JOIN sicoob_conta ON (sicoob_conta.idConta = sicoob_credenciais.conta ) WHERE conta='$this->conta'"); 
-      
+        $credenciais        =  $this->db->select("SELECT * FROM sicoob_credenciais INNER JOIN sicoob_conta ON (sicoob_conta.idConta = sicoob_credenciais.conta ) WHERE conta='$this->conta'");
+
         $this->client_id    =  $credenciais[0]->client_id;
         $this->Secret       =  $credenciais[0]->Secret;
         $this->Basic        =  $credenciais[0]->Basic;
@@ -123,7 +123,9 @@ class Sicoob
         $tokens  = $this->db->select("SELECT * FROM sicoob_access_token  WHERE conta='$this->conta'");
         if (!empty($tokens)) {
             if (strtotime($tokens[0]->dataHoraExpiraAccess) >  strtotime($this->dataHoraAgora)) {
+
                 if (strtotime($tokens[0]->dataHoraExpiraRefresh) <  strtotime($this->dataHoraAgora)) {
+
                     $this->refresh_token = $tokens[0]->refresh_token;
                     $this->access_token  = $tokens[0]->access_token;
 
@@ -173,6 +175,7 @@ class Sicoob
             "code" => $this->code,
             "redirect_uri" =>  $this->redirect_uri
         );
+
         $curl = curl_init();
         curl_setopt_array($curl, array(
             CURLOPT_URL => "https://api.sisbr.com.br/auth/token",
@@ -187,10 +190,10 @@ class Sicoob
             ),
         ));
         $response = curl_exec($curl);
-        $info     = curl_getinfo($curl);
+        // $info     = curl_getinfo($curl);
         $err      = curl_error($curl);
         if ($err) {
-            return json_encode(array("status" => false,  "mensagem" => $err));
+            return json_encode(array("status" => false,  "mensagem: " => $err));
         } else {
             $res = json_decode($response, true);
             if (!empty($res["access_token"]) && !empty($res["refresh_token"])) {
@@ -333,19 +336,51 @@ class Sicoob
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => "POST",
             CURLOPT_HTTPHEADER  => array(
-                "content-type: application/json",
-                "authorization : Bearer  " .  $this->access_token  . " ",
-                "client_id : " . $this->client_id . " "
+                "Content-type:application/json",
+                "Authorization:Bearer  " .  $this->access_token,
+                "Client_id: " . $this->client_id
             ),
             CURLOPT_POSTFIELDS => json_encode($data),
         ));
 
         $response = curl_exec($curl);
 
-
         return $response;
+
+        //return json_encode($data);
     }
 
 
-    
+    public function baixarBoleto()
+    {
+        $dados = array(
+            "numeroContrato" => $this->numeroContrato,
+            "modalidade" => $this->modalidade,
+            "nossoNumero" =>  $this->nossoNumero,
+            "seuNumero" => $this->nossoNumero,
+        );
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => "https://api.sisbr.com.br/cooperado/cobranca-bancaria/v1/boletos/baixa",
+            CURLOPT_SSL_VERIFYPEER => 0,
+            CURLOPT_SSL_VERIFYHOST => 0,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CUSTOMREQUEST => "PATCH",
+            CURLOPT_POSTFIELDS => http_build_query($dados),
+            CURLOPT_HTTPHEADER => array(
+                "Content-Type: application/json",
+                "Authorization: Basic " . $this->accessToken . " ",
+                "Client_id:  " . $this->client_id . " ",
+            ),
+        ));
+        $response = curl_exec($curl);
+        $info = curl_getinfo($curl);
+        $err = curl_error($curl);
+        if ($err) {
+            return  $err;
+        } else {
+            return  $response;
+        }
+        curl_close($curl);
+    }
 }
