@@ -67,3 +67,15 @@ COMMIT;
  
  
  
+CREATE TABLE `sicoob_code` (
+  `code` varchar(200) NOT NULL,
+  `dataExpira` date NOT NULL,
+  `credencial` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+ 
+ 
+ALTER TABLE `sicoob_code`
+  ADD UNIQUE KEY `code` (`code`),
+  ADD KEY `credencial` (`credencial`);
+COMMIT;
+ 
