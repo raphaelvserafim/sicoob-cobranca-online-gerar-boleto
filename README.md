@@ -8,7 +8,4 @@ Classe em PHP cobrança online Sicoob
 
 1- Gerar Boleto online 
  
-
-<img src="https://www.cachesistemas.com.br/imagens/cachesistemasweb.gif" alt="CACHE SISTEMAS"/ style="height: 90px; width: 196px;">
-
  
