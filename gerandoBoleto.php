@@ -2,9 +2,7 @@
 
 require  'config.php';
 
-require  'classe/sicoob.php';
-
-
+ 
 if (empty($_POST["conta_banco_sicoob"])) { // ID DA CONTA
     print json_encode(array("status" => false, "mensagem" => "informe uma conta  antes"));
     exit;
