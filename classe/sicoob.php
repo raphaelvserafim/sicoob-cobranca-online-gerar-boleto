@@ -215,21 +215,7 @@ class Sicoob
          ");
     }
 
-    // fatura 
-
-    public function inforFatura($fatura)
-    {
-        return $this->db->select("SELECT *  FROM f_fatura_aluno 
-        INNER   JOIN  g_faculdade ON (f_fatura_aluno.faculdade  = g_faculdade.id_faculdade)
-        INNER   JOIN  s_aluno ON (s_aluno.cpf_aluno  = f_fatura_aluno.aluno)
-        INNER   JOIN  g_cidade ON (g_cidade.id_cidade  = s_aluno.end_cidade_aluno)
-        INNER   JOIN  g_estado ON (g_estado.id_estado  = s_aluno.end_estado_aluno)
-        INNER   JOIN  f_produtos ON (f_produtos.id_produto  = f_fatura_aluno.produto)
-        INNER   JOIN  f_meio_pg ON (f_meio_pg.id_meio  = f_fatura_aluno.meio_pagamento)
-        WHERE f_fatura_aluno.id_fatura = '$fatura'");
-    }
-
-
+     
 
 
     public function accessToken()
