@@ -2,81 +2,115 @@
 
 require  'config.php';
 
-
-$sicoob = new Sicoob();
-
-$sicoob->conta = 1; // conta escolhida 
-
-$sicoob->consultaCredenciaisConta();
-
-$accessToken = $sicoob->consultaAccessToken();
-
-if ($accessToken["status"]) {
-
-    // dados fatura 
-    $sicoob->seuNumero           = 2; // ID da fatura 
-    $sicoob->valorTitulo         = 5.00; // valor do documento
-    $sicoob->dataEmissao         = date('Y-m-d');
-    $sicoob->dataVencimento      = "2021-04-30"; // Define a data de vencimento;
-
-    // dados cliente
-    $sicoob->numeroCpfCnpj       = "00000000000";
-    $sicoob->nome                = "Raphael";
-    $sicoob->endereco            = "Rua";
-    $sicoob->bairro              = "Cidade Nova";
-    $sicoob->cidade              = "Guaranta Do Norte";
-    $sicoob->cep                 = "78520000";
-    $sicoob->uf                  = "UF";
+require  'classe/sicoob.php';
 
 
-    $verificacao  = $sicoob->verificaSeFaturaTemBoleto();
-    
-    if (empty($verificacao)) {
+if (empty($_POST["conta_banco_sicoob"])) { // ID DA CONTA
+    print json_encode(array("status" => false, "mensagem" => "informe uma conta  antes"));
+    exit;
+} else {
 
-        $boletoJson   = $sicoob->gerarBoleto();
-        $boleto       = json_decode($boletoJson, true);
 
-        $boleto       = json_decode($boletoJson, true);
+    $sicoob           = new Sicoob();
+    $sicoob->conta    = $_POST["conta_banco_sicoob"];
+    $sicoob->consultaCredenciaisConta();
 
-        if ($boleto["resultado"][0]["status"]["codigo"] == 200) {
+    $accessTokenJson  = $sicoob->consultaAccessToken();
+    $accessToken      = json_decode($accessTokenJson, true);
 
-            $sicoob->codigoBarras   = $boleto["resultado"][0]["boleto"]["codigoBarras"];
-            $sicoob->linhaDigitavel = $boleto["resultado"][0]["boleto"]["linhaDigitavel"];
-            $sicoob->nossoNumero    = $boleto["resultado"][0]["boleto"]["nossoNumero"];
 
-            if (!empty($boleto["resultado"][0]["boleto"]["pdfBoleto"])) {
+    if ($accessToken["status"]) {
 
-                $nomeDoPdf   = md5($boleto["resultado"][0]["boleto"]["nossoNumero"] . time()) . ".pdf";
 
-                $pdf_decoded = base64_decode($boleto["resultado"][0]["boleto"]["pdfBoleto"]);
 
-                $caminhoGravar = '../../../assets/pdf/boletos/sicoob/' . date('Y') . '/' . date('m');
+        // dados fatura 
+        $sicoob->seuNumero           = $fatura[0]->id_fatura;
+        $sicoob->valorTitulo         = $fatura[0]->valor;
+        $sicoob->dataEmissao         = date('Y-m-d');
+        $sicoob->dataVencimento      = $fatura[0]->data_vencimento;
 
-                if (!is_dir($caminhoGravar)) {
-                    mkdir($caminhoGravar, 0777, true);
+        // dados cliente
+        $sicoob->numeroCpfCnpj       = $fatura[0]->cpf_aluno;
+        $sicoob->nome                = $fatura[0]->nome_aluno;
+        $sicoob->endereco            = $fatura[0]->logradouro_aluno;
+        $sicoob->bairro              = $fatura[0]->end_bairro_aluno;
+        $sicoob->cidade              = $fatura[0]->nome_cidade;
+        $sicoob->cep                 = preg_replace('/[^0-9]/', '', $fatura[0]->end_cep); // apenas numeros
+        $sicoob->uf                  = $fatura[0]->uf_estado;
+
+
+        if ($fatura[0]->valor_desconto > 0) {
+            $sicoob->tipoDesconto          = 1;
+            $sicoob->dataPrimeiroDesconto  = $fatura[0]->data_desconto;
+            $sicoob->valorPrimeiroDesconto = $fatura[0]->valor_desconto;
+        }
+
+
+        if ($fatura[0]->multa > 0) {
+            $dataMulta  =   date('Y-m-d', strtotime("+2 Days", strtotime($fatura[0]->data_vencimento)));
+            $sicoob->tipoMulta  = 2;
+            $sicoob->dataMulta  =  $dataMulta;
+            $sicoob->valorMulta = $fatura[0]->multa;
+        }
+
+        if ($fatura[0]->juros > 0) {
+            $dataJuros  =   date('Y-m-d', strtotime("+2 Days", strtotime($fatura[0]->data_vencimento)));
+            $sicoob->tipoJurosMora  = 2;
+            $sicoob->valorJurosMora = $fatura[0]->juros;
+            $sicoob->dataJurosMora  = $dataJuros;
+        }
+
+        if (!empty($fatura[0]->observacao)) {
+            $sicoob->mensagensInstrucao_1 = $fatura[0]->observacao;
+        }
+
+
+        $verificacao  = $sicoob->verificaSeFaturaTemBoleto();
+
+        if (empty($verificacao)) {
+
+            $boletoJson   = $sicoob->gerarBoleto();
+            $boleto       = json_decode($boletoJson, true);
+
+            if ($boleto["resultado"][0]["status"]["codigo"] == 200) {
+
+                $sicoob->codigoBarras   = $boleto["resultado"][0]["boleto"]["codigoBarras"];
+                $sicoob->linhaDigitavel = $boleto["resultado"][0]["boleto"]["linhaDigitavel"];
+                $sicoob->nossoNumero    = $boleto["resultado"][0]["boleto"]["nossoNumero"];
+
+                if (!empty($boleto["resultado"][0]["boleto"]["pdfBoleto"])) {
+
+                    $nomeDoPdf   = md5($boleto["resultado"][0]["boleto"]["nossoNumero"] . time()) . ".pdf";
+
+                    $pdf_decoded = base64_decode($boleto["resultado"][0]["boleto"]["pdfBoleto"]);
+
+                    $caminhoGravar =   'assets/pdf/boletos/sicoob/' . date('Y') . '/' . date('m');
+
+                    if (!is_dir($caminhoGravar)) {
+                        mkdir($caminhoGravar, 0777, true);
+                    }
+                    $pdf = fopen($caminhoGravar . '/' . $nomeDoPdf, 'w');
+                    fwrite($pdf, $pdf_decoded);
+                    fclose($pdf);
+                    $caminhoSalveDb = 'assets/pdf/boletos/sicoob/' . date('Y') . '/' . date('m') . '/' . $nomeDoPdf;
+                    $sicoob->pdfBoleto = $caminhoSalveDb;
                 }
-                $pdf = fopen($caminhoGravar . '/' . $nomeDoPdf, 'w');
-                fwrite($pdf, $pdf_decoded);
-                fclose($pdf);
 
-                $caminhoSalveDb = 'assets/pdf/boletos/sicoob/' . date('Y') . '/' . date('m') . '/' . $nomeDoPdf;
-                $sicoob->pdfBoleto = $caminhoSalveDb;
-            }
+                $salve = $sicoob->salvarBoletoDB();
 
-            $salve = $sicoob->salvarBoletoDb();
-
-            if ($salve == TRUE) {
-                print  json_encode(array("status" => true, "mensagem" => "Boleto gerado e salvo com sucesso."));
+                if ($salve == TRUE) {
+                    print  json_encode(array("status" => true, "mensagem" => "Boleto gerado e salvo com sucesso."));
+                } else {
+                    print  json_encode(array("status" => false, "mensagem" =>  $salve));
+                }
             } else {
-                print  json_encode(array("status" => false, "mensagem" =>  $salve));
+                print  json_encode(array("status" => false, "mensagem" => "Erro ao Gerar Boleto: " . json_encode($boleto)));
             }
         } else {
-            print  json_encode(array("status" => false, "mensagem" => $boleto["resultado"][0]["status"]["mensagem"]));
+            print  json_encode(array("status" => false, "mensagem" => "Ja tem um boleto gerado para essa fatura"));
         }
+        
     } else {
-        print  json_encode(array("status" => false, "mensagem" => "Ja tem um boleto gerado para essa fatura"));
+        print  json_encode(array("status" => false, "mensagem" => $accessToken["mensagem"]));
     }
-} else {
-    print  json_encode(array("status" => false, "mensagem" => $accessToken["mensagem"]));
 }
-
