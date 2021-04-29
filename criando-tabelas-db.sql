@@ -50,6 +50,20 @@ ALTER TABLE `sicoob_credenciais`
   ADD UNIQUE KEY `client_id` (`client_id`);
 COMMIT;
 
+
+CREATE TABLE `sicoob_boleto` (
+  `fatura` int(11) NOT NULL,
+  `nossoNumero` varchar(200) NOT NULL,
+  `codigoBarras` varchar(200) NOT NULL,
+  `linhaDigitavel` varchar(200) NOT NULL,
+  `pdfBoleto` varchar(200) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+ 
+ALTER TABLE `sicoob_boleto`
+  ADD UNIQUE KEY `fatura` (`fatura`),
+  ADD UNIQUE KEY `nossoNumero` (`nossoNumero`),
+  ADD KEY `fatura_2` (`fatura`);
+COMMIT;
  
  
  
