@@ -17,6 +17,7 @@ class Sicoob
     public $access_token;
     public $refresh_token;
 
+    public $idCredencial;
 
     // Boleto 
 
@@ -61,8 +62,7 @@ class Sicoob
     // juros
     public $tipoJurosMora  = 3;     //  2 Taxa Mensal - 3 Isento
     public $valorJurosMora = NULL; // informar se for cobrar juros
-
-
+    public $dataJurosMora = NULL;
     // Negativacao
     public $codigoNegativacao     = 3;     // 2 Negativar Dias Úteis - 3 Não Negativar
     public $numeroDiasNegativacao = NULL; // informar nº dias de for negativar
@@ -96,6 +96,9 @@ class Sicoob
 
     // Fim boleto // 
 
+    public $codigoBarras;
+    public $linhaDigitavel;
+    public $pdfBoleto;
 
     public function __construct()
     {
@@ -103,16 +106,21 @@ class Sicoob
         $this->dataHoraAgora = date('Y-m-d H:i:s');
     }
 
+    public function contas()
+    {
+        return   $this->db->select("SELECT * FROM sicoob_conta");
+    }
+
     public function consultaCredenciaisConta()
     {
 
-        $credenciais        =  $this->db->select("SELECT * FROM sicoob_credenciais INNER JOIN sicoob_conta ON (sicoob_conta.idConta = sicoob_credenciais.conta ) WHERE conta='$this->conta'");
-
-        $this->client_id    =  $credenciais[0]->client_id;
-        $this->Secret       =  $credenciais[0]->Secret;
-        $this->Basic        =  $credenciais[0]->Basic;
-        $this->redirect_uri =  $credenciais[0]->redirect_uri;
-
+        $credenciais        =  $this->db->select("SELECT * FROM sicoob_credenciais 
+        INNER JOIN sicoob_conta ON (sicoob_conta.idConta = sicoob_credenciais.conta ) WHERE conta='$this->conta'");
+        $this->idCredencial        =  $credenciais[0]->conta;
+        $this->client_id           =  $credenciais[0]->client_id;
+        $this->Secret              =  $credenciais[0]->Secret;
+        $this->Basic               =  $credenciais[0]->Basic;
+        $this->redirect_uri        =  $credenciais[0]->redirect_uri;
         $this->numeroContrato      =  $credenciais[0]->numeroContrato;
         $this->numeroContaCorrente =  $credenciais[0]->numeroContaCorrente;
     }
@@ -120,34 +128,38 @@ class Sicoob
     public function consultaAccessToken()
     {
 
-        $tokens  = $this->db->select("SELECT * FROM sicoob_access_token  WHERE conta='$this->conta'");
+        $tokens  = $this->db->select("SELECT * FROM sicoob_access_token 
+         INNER JOIN sicoob_code ON (sicoob_code.credencial = $this->conta )
+         INNER JOIN sicoob_credenciais ON (sicoob_credenciais.conta = sicoob_code.credencial)
+         WHERE sicoob_access_token.conta='$this->conta'  ORDER BY sicoob_access_token.id DESC  LIMIT 1");
+
         if (!empty($tokens)) {
             if (strtotime($tokens[0]->dataHoraExpiraAccess) >  strtotime($this->dataHoraAgora)) {
-
                 if (strtotime($tokens[0]->dataHoraExpiraRefresh) <  strtotime($this->dataHoraAgora)) {
-
-                    $this->refresh_token = $tokens[0]->refresh_token;
-                    $this->access_token  = $tokens[0]->access_token;
-
-                    return array("status" => true, "mensagem" =>  $this->refreshToken());
+                    $this->refresh_token =     $tokens[0]->refresh_token;
+                    $this->access_token  =     $tokens[0]->access_token;
+                    $this->code          =     $tokens[0]->code;
+                    $this->redirect_uri  =     $tokens[0]->redirect_uri;
+                    $this->Basic         =     $tokens[0]->Basic;
+                    return $this->refreshToken();
                 } else {
+
                     $this->access_token = $tokens[0]->access_token;
-                    return  array("status" => true, "mensagem" =>  "Ta tudo ok");
+                    return json_encode(array("status" => true, "mensagem" =>  "Ta tudo ok"));
                 }
             } else {
-                return  array("status" => false, "mensagem" => "Precisa fazer Access Token novamente");
+                return json_encode(array("status" => false, "mensagem" => "Precisa fazer Access Token novamente"));
             }
         } else {
-            return  array("status" => false, "mensagem" => "Access Token  e Refresh Token não foram gerados");
+            return  json_encode(array("status" => false, "mensagem" => "Access Token  e Refresh Token não foram gerados"));
         }
     }
 
-    public  function salvarAccessToken()
+    public function salvarAccessToken()
     {
 
         $dataHoraExpiraAccess  =   date('Y-m-d H:i:s', strtotime("+30 Days", strtotime($this->dataHoraAgora)));
         $dataHoraExpiraRefresh =   date('Y-m-d H:i:s', strtotime("+1 Hours", strtotime($this->dataHoraAgora)));
-
         return  $this->db->query("INSERT INTO  sicoob_access_token  SET 
             conta='$this->conta',  
             access_token='$this->access_token',	
@@ -158,10 +170,63 @@ class Sicoob
             ");
     }
 
+
+    public function salvarCodeDB()
+    {
+
+        $dataHoraExpira  =   date('Y-m-d H:i:s', strtotime("+30 Days", strtotime($this->dataHoraAgora)));
+        return  $this->db->query("INSERT INTO  sicoob_code  SET  code='$this->code', dataExpira='$dataHoraExpira', credencial='$this->conta' ");
+    }
+
     public function atualizaRefreshToken()
     {
         $dataHoraExpiraRefresh =   date('Y-m-d H:i:s', strtotime("+1 Hours", strtotime($this->dataHoraAgora)));
-        return  $this->db->query("UPDATE    sicoob_access_token  SET  dataHoraExpiraRefresh='$dataHoraExpiraRefresh' WHERE conta='$this->conta' ");
+        return  $this->db->query("UPDATE  sicoob_access_token  SET 
+            access_token='$this->access_token', 
+            refresh_token='$this->refresh_token',
+            dataHoraExpiraRefresh='$dataHoraExpiraRefresh'
+            WHERE conta='$this->conta' 
+            ");
+    }
+
+
+    public function verificaSeFaturaTemBoleto()
+    {
+        return   $this->db->select("SELECT * FROM sicoob_boleto USE INDEX(fatura) WHERE fatura='$this->seuNumero' LIMIT 1");
+    }
+
+
+    // public function buscarCodeDB()
+    // {
+
+    //     return   $this->db->select("SELECT * FROM sicoob_code USE INDEX(credencial) WHERE credencial='$this->idCredencial' ORDER BY  dataExpira DESC LIMIT 1");
+    // }
+
+
+    public function salvarBoletoDB()
+    {
+
+        return  $this->db->query("INSERT INTO   sicoob_boleto  SET  
+         fatura='$this->seuNumero', 
+         nossoNumero='$this->nossoNumero',	
+         codigoBarras='$this->codigoBarras',	
+         linhaDigitavel='$this->linhaDigitavel',	
+         pdfBoleto='$this->pdfBoleto'  
+         ");
+    }
+
+    // fatura 
+
+    public function inforFatura($fatura)
+    {
+        return $this->db->select("SELECT *  FROM f_fatura_aluno 
+        INNER   JOIN  g_faculdade ON (f_fatura_aluno.faculdade  = g_faculdade.id_faculdade)
+        INNER   JOIN  s_aluno ON (s_aluno.cpf_aluno  = f_fatura_aluno.aluno)
+        INNER   JOIN  g_cidade ON (g_cidade.id_cidade  = s_aluno.end_cidade_aluno)
+        INNER   JOIN  g_estado ON (g_estado.id_estado  = s_aluno.end_estado_aluno)
+        INNER   JOIN  f_produtos ON (f_produtos.id_produto  = f_fatura_aluno.produto)
+        INNER   JOIN  f_meio_pg ON (f_meio_pg.id_meio  = f_fatura_aluno.meio_pagamento)
+        WHERE f_fatura_aluno.id_fatura = '$fatura'");
     }
 
 
@@ -186,11 +251,10 @@ class Sicoob
             CURLOPT_POSTFIELDS => http_build_query($dados),
             CURLOPT_HTTPHEADER => array(
                 "Content-Type: application/x-www-form-urlencoded",
-                "Authorization: Basic " . $this->Basic . " "
+                "Authorization: Basic " . $this->Basic
             ),
         ));
         $response = curl_exec($curl);
-        // $info     = curl_getinfo($curl);
         $err      = curl_error($curl);
         if ($err) {
             return json_encode(array("status" => false,  "mensagem: " => $err));
@@ -201,7 +265,7 @@ class Sicoob
                 $this->refresh_token = $res["refresh_token"];
                 $i = $this->salvarAccessToken();
                 if ($i) {
-                    return json_encode(array("status" => true, "mensagem" => "Salvo com sucesso" . $response));
+                    return json_encode(array("status" => true, "mensagem" => "Salvo com sucesso"));
                 } else {
                     return json_encode(array("status" => false,  "mensagem" => $i));
                 }
@@ -229,22 +293,21 @@ class Sicoob
             CURLOPT_POSTFIELDS => http_build_query($dados),
             CURLOPT_HTTPHEADER => array(
                 "Content-Type: application/x-www-form-urlencoded",
-                "Authorization: Basic " . $this->Basic . " "
+                "Authorization: Basic " . $this->Basic
             ),
         ));
 
         $response = curl_exec($curl);
         $err      = curl_error($curl);
-
         if ($err) {
-            return json_encode(array("status" => false,  "mensagem" => $err));
+            return json_encode(array("status" => false,  "mensagem" => $err, "dados" => json_encode($dados)));
         } else {
             $res                 = json_decode($response, true);
             $this->access_token  = $res["access_token"];
             $this->refresh_token = $res["refresh_token"];
             $i = $this->atualizaRefreshToken();
             if ($i) {
-                return json_encode(array("status" => true, "mensagem" => "Atualizado com sucesso"));
+                return json_encode(array("status" => false, "mensagem" => "Atualizado com sucesso"));
             } else {
                 return json_encode(array("status" => false,  "mensagem" => $i));
             }
@@ -284,7 +347,7 @@ class Sicoob
                 'dataMulta' =>  $this->dataMulta,
                 'valorMulta' =>  $this->valorMulta,
                 'tipoJurosMora' => $this->tipoJurosMora,
-                'dataJurosMora' => $this->tipoJurosMora,
+                'dataJurosMora' => $this->dataJurosMora,
                 'valorJurosMora' => $this->valorJurosMora,
                 'numeroParcela' => $this->numeroParcela,
                 'aceite' => TRUE,
@@ -337,17 +400,14 @@ class Sicoob
             CURLOPT_CUSTOMREQUEST => "POST",
             CURLOPT_HTTPHEADER  => array(
                 "Content-type:application/json",
-                "Authorization:Bearer  " .  $this->access_token,
+                "Authorization: Bearer " .  $this->access_token,
                 "Client_id: " . $this->client_id
             ),
             CURLOPT_POSTFIELDS => json_encode($data),
         ));
-
         $response = curl_exec($curl);
-
         return $response;
-
-        //return json_encode($data);
+        curl_close($curl);
     }
 
 
@@ -369,13 +429,12 @@ class Sicoob
             CURLOPT_POSTFIELDS => http_build_query($dados),
             CURLOPT_HTTPHEADER => array(
                 "Content-Type: application/json",
-                "Authorization: Basic " . $this->accessToken . " ",
-                "Client_id:  " . $this->client_id . " ",
+                "Authorization: Basic " . $this->accessToken,
+                "Client_id:  " . $this->client_id
             ),
         ));
         $response = curl_exec($curl);
-        $info = curl_getinfo($curl);
-        $err = curl_error($curl);
+        $err      = curl_error($curl);
         if ($err) {
             return  $err;
         } else {
