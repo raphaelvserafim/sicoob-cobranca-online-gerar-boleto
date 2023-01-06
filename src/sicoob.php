@@ -3,7 +3,11 @@
 namespace Cachesistemas\Sicoob;
 
 
-class Sicoob
+use Cachesistemas\Sicoob\DB;
+
+
+
+class Sicoob extends DB
 {
 
     private $dataHoraAgora;
@@ -104,27 +108,28 @@ class Sicoob
 
     public function __construct()
     {
-        $this->db = new DB;
         $this->dataHoraAgora = date('Y-m-d H:i:s');
     }
 
     public function contas()
     {
-        return   $this->db->select("SELECT * FROM sicoob_conta");
+        return   DB::select("SELECT * FROM sicoob_conta");
     }
 
     public function consultaCredenciaisConta()
     {
 
-        $credenciais        =  $this->db->select("SELECT * FROM sicoob_credenciais 
-        INNER JOIN sicoob_conta ON (sicoob_conta.idConta = sicoob_credenciais.conta ) WHERE conta='$this->conta'");
-        $this->idCredencial        =  $credenciais[0]->conta;
-        $this->client_id           =  $credenciais[0]->client_id;
-        $this->Secret              =  $credenciais[0]->Secret;
-        $this->Basic               =  $credenciais[0]->Basic;
-        $this->redirect_uri        =  $credenciais[0]->redirect_uri;
-        $this->numeroContrato      =  $credenciais[0]->numeroContrato;
-        $this->numeroContaCorrente =  $credenciais[0]->numeroContaCorrente;
+        $credenciais        =  DB::Select("SELECT * FROM sicoob_credenciais INNER JOIN sicoob_conta ON (sicoob_conta.idConta = sicoob_credenciais.conta ) WHERE conta='$this->conta'");
+        if ($credenciais["status"] && sizeof($credenciais["consulta"]) > 0) {
+            $credenciais               =  $credenciais["consulta"];
+            $this->idCredencial        =  $credenciais[0]->conta;
+            $this->client_id           =  $credenciais[0]->client_id;
+            $this->Secret              =  $credenciais[0]->Secret;
+            $this->Basic               =  $credenciais[0]->Basic;
+            $this->redirect_uri        =  $credenciais[0]->redirect_uri;
+            $this->numeroContrato      =  $credenciais[0]->numeroContrato;
+            $this->numeroContaCorrente =  $credenciais[0]->numeroContaCorrente;
+        }
     }
 
     public function consultaAccessToken()
@@ -217,7 +222,7 @@ class Sicoob
          ");
     }
 
-     
+
 
 
     public function accessToken()
