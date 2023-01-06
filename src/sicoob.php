@@ -209,16 +209,13 @@ class Sicoob extends DB
         $dados = ["grant_type" => "authorization_code", "code" => $this->code, "redirect_uri" =>  $this->redirect_uri];
         $curl = curl_init();
         curl_setopt_array($curl, array(
-            CURLOPT_URL => "https://api.sisbr.com.br/auth/token",
+            CURLOPT_URL => self::URL_API . "/auth/token",
             CURLOPT_SSL_VERIFYPEER => 0,
             CURLOPT_SSL_VERIFYHOST => 0,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CUSTOMREQUEST => "POST",
             CURLOPT_POSTFIELDS => http_build_query($dados),
-            CURLOPT_HTTPHEADER => array(
-                "Content-Type: application/x-www-form-urlencoded",
-                "Authorization: Basic " . $this->Basic
-            ),
+            CURLOPT_HTTPHEADER => ["Content-Type: application/x-www-form-urlencoded", "Authorization: Basic " . $this->Basic],
         ));
         $response = curl_exec($curl);
         $err      = curl_error($curl);
