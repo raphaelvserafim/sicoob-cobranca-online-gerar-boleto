@@ -192,17 +192,10 @@ class Sicoob extends DB
     }
 
 
- 
+
     public function salvarBoletoDB()
     {
-
-        return  $this->db->query("INSERT INTO   sicoob_boleto  SET  
-         fatura='$this->seuNumero', 
-         nossoNumero='$this->nossoNumero',	
-         codigoBarras='$this->codigoBarras',	
-         linhaDigitavel='$this->linhaDigitavel',	
-         pdfBoleto='$this->pdfBoleto'  
-         ");
+        return  DB::Query("INSERT INTO   sicoob_boleto  SET   fatura='$this->seuNumero',  nossoNumero='$this->nossoNumero',	 codigoBarras='$this->codigoBarras',	  linhaDigitavel='$this->linhaDigitavel',	pdfBoleto='$this->pdfBoleto'   ");
     }
 
 
