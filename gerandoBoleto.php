@@ -1,8 +1,11 @@
 <?php
 
+use Cachesistemas\Sicoob\Sicoob;
+
+
 require  'config.php';
 
- 
+
 if (empty($_POST["conta_banco_sicoob"])) { // ID DA CONTA
     print json_encode(array("status" => false, "mensagem" => "informe uma conta  antes"));
     exit;
@@ -107,7 +110,6 @@ if (empty($_POST["conta_banco_sicoob"])) { // ID DA CONTA
         } else {
             print  json_encode(array("status" => false, "mensagem" => "Ja tem um boleto gerado para essa fatura"));
         }
-        
     } else {
         print  json_encode(array("status" => false, "mensagem" => $accessToken["mensagem"]));
     }
