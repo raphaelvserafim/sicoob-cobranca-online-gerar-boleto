@@ -1,5 +1,9 @@
 {
     "name": "cachesistemas/sicoob",
+    "description": "Classe em PHP cobrança online Sicoob",
+    "type": "library",
+    "homepage": "https://github.com/raphaelvserafim/sicoob-cobranca-online-gerar-boleto",
+    "license": "MIT",
     "autoload": {
         "psr-4": {
             "Cachesistemas\\Sicoob\\": "src/"
