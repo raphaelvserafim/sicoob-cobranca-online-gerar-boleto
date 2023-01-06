@@ -1,0 +1,15 @@
+{
+    "name": "cachesistemas/sicoob",
+    "autoload": {
+        "psr-4": {
+            "Cachesistemas\\Sicoob\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Raphael Serafim",
+            "email": "raphaelvserafim@gmail.com"
+        }
+    ],
+    "require": {}
+}
