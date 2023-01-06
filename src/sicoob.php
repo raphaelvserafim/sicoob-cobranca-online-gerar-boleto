@@ -135,12 +135,13 @@ class Sicoob extends DB
     public function consultaAccessToken()
     {
 
-        $tokens  = $this->db->select("SELECT * FROM sicoob_access_token 
+        $tokens  = DB::Select("SELECT * FROM sicoob_access_token 
          INNER JOIN sicoob_code ON (sicoob_code.credencial = $this->conta )
          INNER JOIN sicoob_credenciais ON (sicoob_credenciais.conta = sicoob_code.credencial)
          WHERE sicoob_access_token.conta='$this->conta'  ORDER BY sicoob_access_token.id DESC  LIMIT 1");
 
-        if (!empty($tokens)) {
+        if (sizeof($tokens["consulta"]) > 0) {
+            $tokens = $tokens["consulta"];
             if (strtotime($tokens[0]->dataHoraExpiraAccess) >  strtotime($this->dataHoraAgora)) {
                 if (strtotime($tokens[0]->dataHoraExpiraRefresh) <  strtotime($this->dataHoraAgora)) {
                     $this->refresh_token =     $tokens[0]->refresh_token;
