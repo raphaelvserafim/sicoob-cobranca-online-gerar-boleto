@@ -368,12 +368,7 @@ class Sicoob extends DB
 
     public function baixarBoleto()
     {
-        $dados = array(
-            "numeroContrato" => $this->numeroContrato,
-            "modalidade" => $this->modalidade,
-            "nossoNumero" =>  $this->nossoNumero,
-            "seuNumero" => $this->nossoNumero,
-        );
+        $dados = ["numeroContrato" => $this->numeroContrato, "modalidade" => $this->modalidade, "nossoNumero" =>  $this->nossoNumero, "seuNumero" => $this->nossoNumero];
         $curl = curl_init();
         curl_setopt_array($curl, array(
             CURLOPT_URL => self::URL_API . "/cooperado/cobranca-bancaria/v1/boletos/baixa",
@@ -382,11 +377,7 @@ class Sicoob extends DB
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CUSTOMREQUEST => "PATCH",
             CURLOPT_POSTFIELDS => http_build_query($dados),
-            CURLOPT_HTTPHEADER => array(
-                "Content-Type: application/json",
-                "Authorization: Basic " . $this->accessToken,
-                "Client_id:  " . $this->client_id
-            ),
+            CURLOPT_HTTPHEADER => ["Content-Type: application/json", "Authorization: Basic " . $this->accessToken, "Client_id:  " . $this->client_id],
         ));
         $response = curl_exec($curl);
         $err      = curl_error($curl);
