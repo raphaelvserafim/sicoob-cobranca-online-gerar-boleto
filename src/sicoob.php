@@ -10,6 +10,8 @@ use Cachesistemas\Sicoob\DB;
 class Sicoob extends DB
 {
 
+    const URL_API = 'https://api.sisbr.com.br';
+
     private $dataHoraAgora;
 
     public $conta;
@@ -204,12 +206,7 @@ class Sicoob extends DB
     public function accessToken()
     {
 
-        $dados = array(
-            "grant_type" => "authorization_code",
-            "code" => $this->code,
-            "redirect_uri" =>  $this->redirect_uri
-        );
-
+        $dados = ["grant_type" => "authorization_code", "code" => $this->code, "redirect_uri" =>  $this->redirect_uri];
         $curl = curl_init();
         curl_setopt_array($curl, array(
             CURLOPT_URL => "https://api.sisbr.com.br/auth/token",
@@ -247,25 +244,17 @@ class Sicoob extends DB
 
     public function  refreshToken()
     {
-
-        $dados = array(
-            "grant_type" => "refresh_token",
-            "refresh_token" => $this->refresh_token
-        );
+        $dados = ["grant_type" => "refresh_token",  "refresh_token" => $this->refresh_token];
         $curl = curl_init();
         curl_setopt_array($curl, array(
-            CURLOPT_URL => "https://api.sisbr.com.br/auth/token",
+            CURLOPT_URL => self::URL_API . "/auth/token",
             CURLOPT_SSL_VERIFYPEER => 0,
             CURLOPT_SSL_VERIFYHOST => 0,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CUSTOMREQUEST => "POST",
             CURLOPT_POSTFIELDS => http_build_query($dados),
-            CURLOPT_HTTPHEADER => array(
-                "Content-Type: application/x-www-form-urlencoded",
-                "Authorization: Basic " . $this->Basic
-            ),
+            CURLOPT_HTTPHEADER => ["Content-Type: application/x-www-form-urlencoded", "Authorization: Basic " . $this->Basic],
         ));
-
         $response = curl_exec($curl);
         $err      = curl_error($curl);
         if ($err) {
