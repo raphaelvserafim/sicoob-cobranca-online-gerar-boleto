@@ -14,6 +14,7 @@ if (empty($_POST["conta_banco_sicoob"])) { // ID DA CONTA
 
     $sicoob           = new Sicoob();
     $sicoob->conta    = $_POST["conta_banco_sicoob"];
+
     $sicoob->consultaCredenciaisConta();
 
     $accessTokenJson  = $sicoob->consultaAccessToken();
@@ -68,7 +69,7 @@ if (empty($_POST["conta_banco_sicoob"])) { // ID DA CONTA
 
         $verificacao  = $sicoob->verificaSeFaturaTemBoleto();
 
-        if (empty($verificacao)) {
+        if (sizeof($verificacao["consulta"]) == 0) {
 
             $boletoJson   = $sicoob->gerarBoleto();
             $boleto       = json_decode($boletoJson, true);
@@ -99,7 +100,7 @@ if (empty($_POST["conta_banco_sicoob"])) { // ID DA CONTA
 
                 $salve = $sicoob->salvarBoletoDB();
 
-                if ($salve == TRUE) {
+                if ($salve["status"]) {
                     print  json_encode(array("status" => true, "mensagem" => "Boleto gerado e salvo com sucesso."));
                 } else {
                     print  json_encode(array("status" => false, "mensagem" =>  $salve));
