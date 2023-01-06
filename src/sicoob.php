@@ -377,7 +377,7 @@ class Sicoob extends DB
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CUSTOMREQUEST => "PATCH",
             CURLOPT_POSTFIELDS => http_build_query($dados),
-            CURLOPT_HTTPHEADER => ["Content-Type: application/json", "Authorization: Basic " . $this->accessToken, "Client_id:  " . $this->client_id],
+            CURLOPT_HTTPHEADER => ["Content-Type: application/json", "Authorization: Basic " . $this->access_token, "Client_id:  " . $this->client_id],
         ));
         $response = curl_exec($curl);
         $err      = curl_error($curl);
