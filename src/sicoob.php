@@ -168,14 +168,7 @@ class Sicoob extends DB
 
         $dataHoraExpiraAccess  =   date('Y-m-d H:i:s', strtotime("+30 Days", strtotime($this->dataHoraAgora)));
         $dataHoraExpiraRefresh =   date('Y-m-d H:i:s', strtotime("+1 Hours", strtotime($this->dataHoraAgora)));
-        return  $this->db->query("INSERT INTO  sicoob_access_token  SET 
-            conta='$this->conta',  
-            access_token='$this->access_token',	
-            refresh_token='$this->refresh_token',
-            dataHoraGeradoAccess='$this->dataHoraAgora',
-            dataHoraExpiraAccess='$dataHoraExpiraAccess', 
-            dataHoraExpiraRefresh='$dataHoraExpiraRefresh'
-            ");
+        return  DB::Query("INSERT INTO  sicoob_access_token  SET  conta='$this->conta',  access_token='$this->access_token', refresh_token='$this->refresh_token', dataHoraGeradoAccess='$this->dataHoraAgora', dataHoraExpiraAccess='$dataHoraExpiraAccess', dataHoraExpiraRefresh='$dataHoraExpiraRefresh' ");
     }
 
 
@@ -183,34 +176,23 @@ class Sicoob extends DB
     {
 
         $dataHoraExpira  =   date('Y-m-d H:i:s', strtotime("+30 Days", strtotime($this->dataHoraAgora)));
-        return  $this->db->query("INSERT INTO  sicoob_code  SET  code='$this->code', dataExpira='$dataHoraExpira', credencial='$this->conta' ");
+        return  DB::Query("INSERT INTO  sicoob_code  SET  code='$this->code', dataExpira='$dataHoraExpira', credencial='$this->conta' ");
     }
 
     public function atualizaRefreshToken()
     {
         $dataHoraExpiraRefresh =   date('Y-m-d H:i:s', strtotime("+1 Hours", strtotime($this->dataHoraAgora)));
-        return  $this->db->query("UPDATE  sicoob_access_token  SET 
-            access_token='$this->access_token', 
-            refresh_token='$this->refresh_token',
-            dataHoraExpiraRefresh='$dataHoraExpiraRefresh'
-            WHERE conta='$this->conta' 
-            ");
+        return DB::Query("UPDATE  sicoob_access_token  SET  access_token='$this->access_token',  refresh_token='$this->refresh_token', dataHoraExpiraRefresh='$dataHoraExpiraRefresh'  WHERE conta='$this->conta'  ");
     }
 
 
     public function verificaSeFaturaTemBoleto()
     {
-        return   $this->db->select("SELECT * FROM sicoob_boleto USE INDEX(fatura) WHERE fatura='$this->seuNumero' LIMIT 1");
+        return   DB::Select("SELECT * FROM sicoob_boleto USE INDEX(fatura) WHERE fatura='$this->seuNumero' LIMIT 1");
     }
 
 
-    // public function buscarCodeDB()
-    // {
-
-    //     return   $this->db->select("SELECT * FROM sicoob_code USE INDEX(credencial) WHERE credencial='$this->idCredencial' ORDER BY  dataExpira DESC LIMIT 1");
-    // }
-
-
+ 
     public function salvarBoletoDB()
     {
 
