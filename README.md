@@ -24,6 +24,13 @@
 
 
 #### Exemplo de Uso Gerando Boleto
+
+
+## Instalando via composer
+```
+composer require cachesistemas/sicoob
+```
+
 ```php
 
  use Cachesistemas\Sicoob\Sicoob;
