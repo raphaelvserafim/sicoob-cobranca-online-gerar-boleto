@@ -1,5 +1,6 @@
 <?php
 
+use Cachesistemas\Sicoob\Sicoob;
 
 require  'config.php';
 
@@ -12,8 +13,6 @@ $sicoob->consultaCredenciaisConta();
 
 
 if (!empty($_GET["code"])) {
-
      $sicoob->code = $_GET["code"];
      print  $sicoob->accessToken();
 }
-
