@@ -274,9 +274,9 @@ class Sicoob extends DB
     public function gerarBoleto()
     {
 
-        $data = array(
+        $data = [
             0 =>
-            array(
+            [
                 'numeroContrato' => $this->numeroContrato,
                 'modalidade' => $this->modalidade,
                 'numeroContaCorrente' => $this->numeroContaCorrente,
@@ -341,12 +341,12 @@ class Sicoob extends DB
                     ),
                 ),
                 'gerarPdf' => $this->gerarPdf,
-            ),
-        );
+            ],
+        ];
 
         $curl = curl_init();
         curl_setopt_array($curl, array(
-            CURLOPT_URL =>  "https://api.sisbr.com.br/cooperado/cobranca-bancaria/v1/boletos",
+            CURLOPT_URL => self::URL_API . "/cooperado/cobranca-bancaria/v1/boletos",
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => "",
             CURLOPT_MAXREDIRS => 10,
@@ -376,7 +376,7 @@ class Sicoob extends DB
         );
         $curl = curl_init();
         curl_setopt_array($curl, array(
-            CURLOPT_URL => "https://api.sisbr.com.br/cooperado/cobranca-bancaria/v1/boletos/baixa",
+            CURLOPT_URL => self::URL_API . "/cooperado/cobranca-bancaria/v1/boletos/baixa",
             CURLOPT_SSL_VERIFYPEER => 0,
             CURLOPT_SSL_VERIFYHOST => 0,
             CURLOPT_RETURNTRANSFER => true,
